@@ -1,6 +1,6 @@
 {
   "name": "next-result",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0",
   "description": "A result type for Next.js, inspired by rust's Result type.",
   "source": "src/index.ts",
   "main": "dist/index.mjs",
@@ -16,7 +16,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts",
-    "prepare": "pnpm run build"
+    "prepare": "pnpm run build",
+    "test": "vitest"
   },
   "keywords": [
     "nextjs",
@@ -29,7 +30,8 @@
   "author": "Siddharth Borderwala",
   "license": "MIT",
   "devDependencies": {
+    "tsup": "8.4.0",
     "typescript": "latest",
-    "tsup": "8.4.0"
+    "vitest": "3.0.8"
   }
 }
