@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "tsup src/index.ts",
-    "prepare": "pnpm run build",
+    "prepare": "pnpm run test && pnpm run build",
     "test": "vitest"
   },
   "keywords": [
