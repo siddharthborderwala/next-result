@@ -1,6 +1,6 @@
 # next-result
 
-A Result type built for Next.js; can be used anywhere.
+A rust-inspired Result type for Next.js; can be used anywhere.
 
 ## Features
 

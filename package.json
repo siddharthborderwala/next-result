@@ -1,7 +1,25 @@
 {
   "name": "next-result",
-  "version": "0.1.0",
-  "description": "A result type for Next.js, inspired by rust's Result type.",
+  "version": "0.1.1",
+  "description": "A rust-inspired Result type for Next.js; can be used anywhere!",
+  "homepage": "https://github.com/siddharthborderwala/next-result#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/siddharthborderwala/next-result.git"
+  },
+  "bugs": {
+    "url": "https://github.com/siddharthborderwala/next-result/issues"
+  },
+  "keywords": [
+    "nextjs",
+    "result",
+    "error",
+    "success",
+    "typescript",
+    "rust"
+  ],
+  "author": "Siddharth Borderwala",
+  "license": "MIT",
   "source": "src/index.ts",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
@@ -19,16 +37,6 @@
     "prepare": "pnpm run test && pnpm run build",
     "test": "vitest"
   },
-  "keywords": [
-    "nextjs",
-    "result",
-    "error",
-    "success",
-    "typescript",
-    "rust"
-  ],
-  "author": "Siddharth Borderwala",
-  "license": "MIT",
   "devDependencies": {
     "tsup": "8.4.0",
     "typescript": "latest",
