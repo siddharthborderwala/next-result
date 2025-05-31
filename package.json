@@ -1,6 +1,6 @@
 {
   "name": "next-result",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A rust-inspired Result type for Next.js; can be used anywhere!",
   "homepage": "https://github.com/siddharthborderwala/next-result#readme",
   "repository": {
