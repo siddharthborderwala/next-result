@@ -34,7 +34,7 @@ pnpm add next-result
 The Result type provides a type-safe way to handle operations that might fail:
 
 ```typescript
-import { Result, Ok, Err } from "next-result";
+import { Result, Ok, Err, isErr, isOk } from "next-result";
 
 function divide(a: number, b: number): Result<number> {
   if (b === 0) {
@@ -53,6 +53,12 @@ if (result1.ok) {
 const result2 = divide(10, 0);
 if (!result2.ok) {
   console.log(result2.error); // "Cannot divide by zero"
+}
+
+// Using type guards for better type safety
+const result3 = divide(8, 4);
+if (isOk(result3)) {
+  console.log(result3.value); // 2
 }
 ```
 
@@ -77,7 +83,13 @@ export async function createUser(name: string) {
     const user = await db.users.create({ name });
     return Ok({ id: user.id, name: user.name });
   } catch (error) {
-    return Err("Failed to create user");
+    // Different error codes can be used for different error scenarios
+    if (error.code === "DUPLICATE_KEY") {
+      return Err("User already exists", "USER_EXISTS");
+    } else if (error.code === "VALIDATION_ERROR") {
+      return Err("Invalid user data", "VALIDATION_FAILED");
+    }
+    return Err("Failed to create user", "USER_CREATION_FAILED");
   }
 }
 ```
@@ -91,6 +103,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createUser } from "../actions";
 
 export function CreateUser() {
+  // Using direct result access to preserve error codes
   const { mutate, isError, isSuccess, isPending, error, data } = useMutation({
     mutationFn: (name: string) => unwrapPromise(createUser(name)),
     onSuccess: (data) => {
@@ -98,8 +111,15 @@ export function CreateUser() {
       // show a success toast
     },
     onError: (error) => {
-      // do something
-      // show an error toast
+      // show a custom error message based on the code
+      switch (error.code) {
+        case "DUPLICATE_KEY":
+          return "Account already exists, please login.";
+        case "VALIDATION_ERROR":
+          return "Please provide a valid email.";
+        default:
+          return "Failed to create user";
+      }
     },
   });
 
@@ -145,13 +165,29 @@ type Ok<T> = {
 
 #### Err
 
-Represents an error result containing an error message.
+Represents an error result containing an error message and an optional error code.
 
 ```typescript
 type Err = {
   ok: false;
   error: string;
+  code?: string;  // Optional error code for more specific error handling
 };
+```
+
+Using error codes makes it easier to categorize and handle different types of errors:
+
+```typescript
+// Database errors
+Err("Record not found");
+Err("Duplicate entry");
+
+// Authentication errors
+Err("Invalid credentials", "UNAUTHORIZED");
+Err("Token expired", "TOKEN_EXPIRED");
+
+// Validation errors
+Err("Invalid email format", "INVALID_EMAIL");
 ```
 
 #### Option
@@ -168,26 +204,6 @@ A promise that resolves to a Result.
 
 ```typescript
 type PromiseResult<T> = Promise<Result<T>>;
-```
-
-### Constructors
-
-#### Ok
-
-Creates a successful result containing a value.
-
-```typescript
-const success = Ok(42);
-// { ok: true, value: 42 }
-```
-
-#### Err
-
-Creates an error result with an error message.
-
-```typescript
-const error = Err("Something went wrong");
-// { ok: false, error: "Something went wrong" }
 ```
 
 ### Type Guards
@@ -208,7 +224,11 @@ Type guard to check if a result is an error.
 
 ```typescript
 if (isErr(result)) {
-  // result.error is accessible here
+  // result.error and result.code are accessible here
+  console.log(result.error); // Error message
+  if (result.code === "UNKNOWN") {
+    console.log(result.code);  // Error code if present
+  }
 }
 ```
 
@@ -259,6 +279,12 @@ Awaits a promise result and unwraps it.
 ```typescript
 const value = await unwrapPromise(Promise.resolve(Ok(42))); // 42
 // throws if the result is an error
+try {
+  await unwrapPromise(Promise.resolve(Err("Failed", "AUTH_ERROR")));
+} catch (error) {
+  // error.message will be "Failed"
+  // Note: the error code is not preserved in the thrown error
+}
 ```
 
 #### unwrapPromiseOrDefault
@@ -273,11 +299,18 @@ async function testOK() {
 
 async function testErr() {
   // ... some async operations
-  return Err("error");
+  return Err("error", "VALIDATION_ERROR");
 }
 
 const value = await unwrapPromiseOrDefault(testOK(), 0); // 42
 const def = await unwrapPromiseOrDefault(testErr(), 0); // 0
+
+// To preserve error codes, you can check the result before unwrapping
+const result = await testErr();
+if (isErr(result)) {
+  console.log(result.error); // "error"
+  console.log(result.code);  // "VALIDATION_ERROR"
+}
 ```
 
 ## License
