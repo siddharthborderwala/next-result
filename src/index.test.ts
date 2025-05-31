@@ -12,6 +12,7 @@ import {
   unwrapPromiseOrDefault,
   type Result,
   type Option,
+  type Err as ErrType,
 } from "./index";
 
 describe("Result Type", () => {
@@ -55,6 +56,16 @@ describe("Result Type", () => {
       const result = Err("error message");
       expect(result).toEqual({ ok: false, error: "error message" });
     });
+
+    it("should include an error code when provided", () => {
+      const result = Err("error message", "NOT_FOUND");
+      expect(result).toEqual({ ok: false, error: "error message", code: "NOT_FOUND" });
+    });
+
+    it("should have undefined code when not provided", () => {
+      const result = Err("error message");
+      expect(result.code).toBeUndefined();
+    });
   });
 
   describe("Type Guards", () => {
@@ -65,6 +76,21 @@ describe("Result Type", () => {
 
       it("should return false for Err results", () => {
         expect(isOk(Err("error"))).toBe(false);
+      });
+    });
+
+    describe("Error with code", () => {
+      it("should correctly type-narrow to access the code property", () => {
+        const result = Err("Permission denied", "FORBIDDEN");
+        
+        if (isErr(result)) {
+          // If type narrowing works, we can access the code property
+          const errorCode: string | undefined = result.code;
+          expect(errorCode).toBe("FORBIDDEN");
+        } else {
+          // This should never execute
+          expect(true).toBe(false);
+        }
       });
     });
 
@@ -182,13 +208,18 @@ describe("Result Type", () => {
     it("should handle division example", () => {
       function divide(a: number, b: number): Result<number> {
         if (b === 0) {
-          return Err("Cannot divide by zero");
+          return Err("Cannot divide by zero", "DIVISION_BY_ZERO");
         }
         return Ok(a / b);
       }
 
       expect(unwrap(divide(10, 2))).toBe(5);
       expect(() => unwrap(divide(10, 0))).toThrow("Cannot divide by zero");
+      
+      const errorResult = divide(10, 0);
+      if (isErr(errorResult)) {
+        expect(errorResult.code).toBe("DIVISION_BY_ZERO");
+      }
     });
 
     it("should handle async operations", async () => {
@@ -198,7 +229,7 @@ describe("Result Type", () => {
         if (id === "1") {
           return Ok({ id: "1", name: "John" });
         }
-        return Err("User not found");
+        return Err("User not found", "USER_NOT_FOUND");
       }
 
       const user = await unwrapPromiseOrDefault(fetchUser("1"), {
@@ -212,6 +243,12 @@ describe("Result Type", () => {
         name: "Anonymous",
       });
       expect(defaultUser).toEqual({ id: "0", name: "Anonymous" });
+      
+      // Test error code in async context
+      const errorResult = await fetchUser("999");
+      if (isErr(errorResult)) {
+        expect(errorResult.code).toBe("USER_NOT_FOUND");
+      }
     });
   });
 });
